@@ -1,5 +1,6 @@
 # config/wsgi.py
 
+import utils.session
 import os
 
 from django.core.wsgi import get_wsgi_application
