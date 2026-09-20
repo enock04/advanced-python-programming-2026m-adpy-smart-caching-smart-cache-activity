@@ -18,11 +18,8 @@ db.sqlite3
 media/
 
 # Environment variables
-.env
-.env.local
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -33,3 +30,5 @@ Thumbs.db
 
 # Solution (never commit this to student-facing branch)
 # solution/
+config.bat
+node_modules
