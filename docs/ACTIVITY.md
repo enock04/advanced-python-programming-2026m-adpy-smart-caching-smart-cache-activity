@@ -124,7 +124,7 @@ cache.set("your-key", data, timeout=300)   # stores data for 300 seconds
 > **Discussion:** What cache key did you choose for the list endpoint?
 > Compare with a classmate — did you choose the same key? Why or why not?
 
-_Answer:_ `"posts:list:published"` — a namespaced key (`resource:action:filter`).
+_Answer:_ `"posts:list:published"`: a namespaced key (`resource:action:filter`).
 Every visitor sees the exact same published-post list, so one shared key can
 serve everyone and still be correct; there's no per-user data in this
 response. The namespacing (`posts:` prefix, `:list` vs `:detail`) matters so
@@ -157,7 +157,7 @@ Look at `BrokenDraftsView` at the bottom of `views.py`.
 
 > What is the bug in `BrokenDraftsView`?
 
-_Your answer:_ The cache key is the hardcoded literal string `"my-drafts"` —
+_Answer:_ The cache key is the hardcoded literal string `"my-drafts"`,
 identical for every user. It never includes `request.user.id`, so all
 authenticated users read from and write to the exact same cache slot.
 
@@ -167,29 +167,29 @@ authenticated users read from and write to the exact same cache slot.
 > 1. Alice logs in and calls `/api/posts/broken-drafts/`
 > 2. Bob logs in and calls `/api/posts/broken-drafts/`
 
-_Your answer:_
+_Answer:_
 1. Alice calls the endpoint → `cache.get("my-drafts")` misses → her drafts are
    queried from the DB, serialized, and stored under `"my-drafts"` for 120s →
    Alice correctly receives her own drafts.
 2. Bob calls the same endpoint (within that 120s window) → `cache.get("my-drafts")`
-   **hits** — because it's the same key Alice just filled — and Bob is handed
+   **hits**, because it's the same key Alice just filled, and Bob is handed
    Alice's serialized drafts directly, without the view ever touching the
    database or checking whose data it actually is.
 
-I verified this with an isolated test (`APIClient`, `force_authenticate`):
+We verified this with an isolated test (`APIClient`, `force_authenticate`):
 after Alice populates `"my-drafts"`, Bob's response titles are byte-for-byte
-identical to Alice's — confirmed cross-user leak, not a hypothetical.
+identical to Alice's, confirmed cross-user leak, not a hypothetical.
 
 ---
 
 > What is the real-world impact of this bug if it shipped to production?
 
-_Your answer:_ Any logged-in user can view another user's private, unpublished drafts for up to 120 seconds after that user last loaded their own drafts. This is an access-control/IDOR-style data leak, but the flaw sits in the caching layer rather than in the permission check itself, which works correctly. On a blog platform, this could expose unreleased articles, embargoed announcements, or personal notes. It's also completely silent —there's no error and no log entry, and nothing distinguishes a leaked response from a normal one — so the issue could persist in production for a long time before it's ever noticed.
+_Answer:_ Any logged-in user can view another user's private, unpublished drafts for up to 120 seconds after that user last loaded their own drafts. This is an access-control/IDOR-style data leak, but the flaw sits in the caching layer rather than in the permission check itself, which works correctly. On a blog platform, this could expose unreleased articles, embargoed announcements, or personal notes. It's also completely silent, there's no error and no log entry, and nothing distinguishes a leaked response from a normal one, so the issue could persist in production for a long time before it's ever noticed.
 ---
 
 > What is the one-line fix?
 
-_Your answer:_ Scope the key to the requesting user, exactly like
+_Answer:_ Scope the key to the requesting user, exactly like
 `MyDraftsView` does:
 `cache_key = f"my-drafts:{request.user.id}"` (and use `cache_key` in place of
 `"my-drafts"` in both the `cache.get()` and `cache.set()` calls).
@@ -224,12 +224,12 @@ cache.delete("your-key-here")   # removes the stale entry
 > **Discussion:** What's the difference between `cache.delete()` and
 > updating the cache with the new data directly? When would you choose each?
 
-_Answer:_ `cache.delete()` just removes the stale entry — the *next* GET gets
+_Answer:_ `cache.delete()` just removes the stale entry, the *next* GET gets
 a cache miss, re-queries the DB, and repopulates the cache (classic
 cache-aside; simple, and the write path stays decoupled from how the read
 path shapes its response). Updating the cache directly ("write-through")
 means the write path immediately puts a fresh, correctly-serialized value
-back under the same key, so there's never a miss at all — but now the write
+back under the same key, so there's never a miss at all, but now the write
 path has to reconstruct exactly what the read path would have produced
 (same queryset, same serializer), which is more code and can drift out of
 sync if one side changes and the other doesn't. I used `delete()` here
@@ -289,7 +289,7 @@ python timing.py
 > cache effect from network/process noise better than 3 raw `timing.py` runs
 > on a machine this fast). The list endpoint improves a lot because avoiding
 > the DB hit also avoids re-serializing ~400 rows every time. The single-post
-> endpoint barely moves — a SQLite lookup by primary key on 500 rows is
+> endpoint barely moves, a SQLite lookup by primary key on 500 rows is
 > already close to free locally, so there's very little DB cost left for the
 > cache to remove. **Lesson:** caching helps most when the *uncached* work is
 > expensive; for a cheap indexed lookup, caching mainly avoids
@@ -304,7 +304,7 @@ Answer these before the debrief:
 
 1. Why did you use a **shared** key for `/api/posts/` but a **user-specific** key for `/my-drafts/`?
 
-   _Answer:_ `/api/posts/` returns the same data to everyone — it's public,
+   _Answer:_ `/api/posts/` returns the same data to everyone, it's public,
    so one cache entry can correctly serve every visitor and the hit rate is
    maximized. `/my-drafts/` returns different, private data *per user*; a
    shared key would mean whoever populates the cache first "leaks" their
@@ -314,12 +314,12 @@ Answer these before the debrief:
 
 2. What would happen if you set `timeout=None` on the post list cache?
 
-   _Answer:_ The entry would never expire on its own — it lives in the cache
+   _Answer:_ The entry would never expire on its own, it lives in the cache
    backend forever (until evicted for memory pressure or the process
    restarts, since `LocMemCache` is per-process) and only changes when
    something explicitly calls `cache.delete()` or overwrites it. That's fine
    as long as *every* write path that changes published posts also
-   invalidates the cache — but if any other path forgets to (an admin edit,
+   invalidates the cache, but if any other path forgets to (an admin edit,
    a bulk import, a future endpoint), the cache would serve stale data
    indefinitely with no self-healing, which is worse than a short TTL where
    staleness is at least bounded in time.
@@ -332,7 +332,7 @@ Answer these before the debrief:
    creates, edits, or deletes a draft. If Alice saves a new draft and then
    immediately calls `/my-drafts/`, she can be served her own stale cached
    list (missing the new draft, or still showing one she just deleted) for
-   up to 120 seconds — a correctness bug, not a security one, but still a
+   up to 120 seconds, a correctness bug, not a security one, but still a
    real "why isn't my draft showing up" bug report. Fixing it needs the same
    idea as Level 4: `cache.delete(f"my-drafts:{request.user.id}")` after any
    write to that user's drafts.
