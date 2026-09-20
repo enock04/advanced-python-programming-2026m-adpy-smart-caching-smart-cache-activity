@@ -4,6 +4,19 @@ A guided hands-on activity for the **Advanced Python Programming**.
 Students add a production-quality cache layer to a Django REST API, level by level.
 
 ---
+# Team Members Track sheet:
+
+- **Student 1**: Tito Sibo Jean
+- **Student 2**: Elvis Shimwa
+- **Student 3**: Enock Ntwari
+- **Student 4**: Kayisire Kira Armel
+
+- **Link to the sheet**: https://docs.google.com/spreadsheets/d/1aVHQjLRPIrNCDt5m9zp7OOgzwfFvgzaEhZc7DpRFcew/edit?usp=sharing
+
+A guided hands-on activity for the **Advanced Python Programming**.  
+Students add a production-quality cache layer to a Django REST API, level by level.
+
+---
 
 ## What You'll Build
 
