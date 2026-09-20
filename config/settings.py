@@ -67,6 +67,9 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+
+        # Unique location for our Smart Caching activity.
+        # This prevents the cache from conflicting with other projects.
         "LOCATION": "smart-cache-activity",
     }
 }
