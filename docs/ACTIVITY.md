@@ -184,15 +184,7 @@ identical to Alice's — confirmed cross-user leak, not a hypothetical.
 
 > What is the real-world impact of this bug if it shipped to production?
 
-_Your answer:_ Any authenticated user can read any other user's private,
-unpublished drafts for up to 120 seconds after that user last loaded their own
-drafts — an access-control/IDOR-style data leak, except the vulnerable code
-path is the cache layer, not the permission check (which is correct here).
-For a blog platform this could expose unreleased articles, embargoed
-announcements, or personal notes. It's also silent: no error, no log entry,
-nothing distinguishes a "leaked" response from a normal one, so it could run
-in production for a long time before anyone notices.
-
+_Your answer:_ Any logged-in user can view another user's private, unpublished drafts for up to 120 seconds after that user last loaded their own drafts. This is an access-control/IDOR-style data leak, but the flaw sits in the caching layer rather than in the permission check itself, which works correctly. On a blog platform, this could expose unreleased articles, embargoed announcements, or personal notes. It's also completely silent —there's no error and no log entry, and nothing distinguishes a leaked response from a normal one — so the issue could persist in production for a long time before it's ever noticed.
 ---
 
 > What is the one-line fix?
